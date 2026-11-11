@@ -1,13 +1,14 @@
 {
-  "name": "task-manager-backend",
+  "name": "gym-membership-backend",
   "version": "1.0.0",
-  "description": "Backend for Task Manager App",
+  "description": "Backend API for Gym Membership Manager",
   "main": "server.js",
   "scripts": {
-    "test": "mocha",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "prod": "node server.js"
+    "prod": "node server.js",
+    "test": "mocha --exit",
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
@@ -17,8 +18,7 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.0.14",
-    "request": "^2.88.2"
+    "mongoose": "^6.0.14"
   },
   "devDependencies": {
     "esm": "^3.2.25",
@@ -26,6 +26,6 @@
     "nodemon": "^2.0.15",
     "sinon": "^19.0.2"
   },
-  "author": "Task Manager Team",
+  "author": "Mohammad Shayan Khezri Nassab",
   "license": "ISC"
 }
