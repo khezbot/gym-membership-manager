@@ -4,9 +4,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Plans from './pages/Plans';
+import ManagePlans from './pages/admin/ManagePlans';
 import { useAuth } from './context/AuthContext';
 
-// Temporary placeholders until the feature pages are built (GMM-7 to GMM-12)
+// Temporary placeholder until the membership request pages are built (GMM-10 to GMM-12)
 const ComingSoon = ({ text }) => <p className="p-6 text-gray-600">{text}</p>;
 
 const Home = () => {
@@ -24,7 +26,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/plans" element={<ProtectedRoute role="member"><ComingSoon text="Plans – coming in GMM-9" /></ProtectedRoute>} />
+        <Route path="/plans" element={<ProtectedRoute role="member"><Plans /></ProtectedRoute>} />
+        <Route path="/admin/plans" element={<ProtectedRoute role="admin"><ManagePlans /></ProtectedRoute>} />
         <Route path="/admin/requests" element={<ProtectedRoute role="admin"><ComingSoon text="Membership requests – coming in GMM-11" /></ProtectedRoute>} />
         <Route path="*" element={<Home />} />
       </Routes>
