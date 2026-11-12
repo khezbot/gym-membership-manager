@@ -1,9 +1,15 @@
-// Creates the first admin account.
+// Creates the first admin account and three sample plans.
 // Usage (from backend/): npm run seed
-// (Sample plans are added in GMM-7 once the Plan model exists.)
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const Plan = require('../models/Plan');
+
+const samplePlans = [
+  { name: 'Monthly Standard', description: 'Gym floor access, 6am–10pm', durationMonths: 1, price: 59 },
+  { name: 'Quarterly Plus', description: 'Gym floor + group classes', durationMonths: 3, price: 159 },
+  { name: 'Annual Premium', description: '24/7 access, classes and 2 PT sessions', durationMonths: 12, price: 549 },
+];
 
 (async () => {
   const { MONGO_URI, ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
@@ -23,6 +29,10 @@ const User = require('../models/User');
     console.log(`Admin ${ADMIN_EMAIL} created.`);
   }
 
+  for (const p of samplePlans) {
+    await Plan.updateOne({ name: p.name }, { $setOnInsert: p }, { upsert: true });
+  }
+  console.log('Sample plans ready.');
   await mongoose.disconnect();
 })().catch((e) => {
   console.error(e);

@@ -14,6 +14,7 @@ app.use(express.json({ limit: '100kb' }));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/plans', require('./routes/planRoutes'));
 
 if (require.main === module) {
   if (!process.env.JWT_SECRET) {
