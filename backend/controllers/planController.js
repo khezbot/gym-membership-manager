@@ -41,6 +41,11 @@ const updatePlan = async (req, res) => {
   try {
     const plan = await Plan.findById(req.params.id);
     if (!plan) return res.status(404).json({ message: 'Plan not found' });
+    // Renaming to another plan's name would hit the unique index and return a 500.
+    if (req.body.name && String(req.body.name).trim() !== plan.name) {
+      const clash = await Plan.findOne({ name: String(req.body.name).trim() });
+      if (clash) return res.status(409).json({ message: 'A plan with this name already exists' });
+    }
     ['name', 'description', 'durationMonths', 'price', 'isActive'].forEach((k) => {
       if (req.body[k] !== undefined) plan[k] = req.body[k];
     });

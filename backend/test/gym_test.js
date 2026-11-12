@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const mongoose = require('mongoose');
 const Plan = require('../models/Plan');
 const Membership = require('../models/Membership');
-const { createPlan, deletePlan, getPlans } = require('../controllers/planController');
+const { createPlan, updatePlan, deletePlan, getPlans } = require('../controllers/planController');
 const { authorize } = require('../middleware/authMiddleware');
 const { validatePlan } = require('../utils/validation');
 
@@ -67,6 +67,16 @@ describe('Plan controller', () => {
     const res = mockRes();
     await createPlan({ body: { name: 'Monthly Standard', durationMonths: 1, price: 59 } }, res);
     expect(res.status.calledWith(409)).to.be.true;
+  });
+
+  it('returns 409 when renaming a plan to an existing name', async () => {
+    const save = sinon.stub();
+    sinon.stub(Plan, 'findById').resolves({ _id: id(), name: 'Old name', save });
+    sinon.stub(Plan, 'findOne').resolves({ _id: id(), name: 'Monthly Standard' });
+    const res = mockRes();
+    await updatePlan({ params: { id: 'p1' }, body: { name: 'Monthly Standard' } }, res);
+    expect(res.status.calledWith(409)).to.be.true;
+    expect(save.called).to.be.false;
   });
 
   it('shows members only active plans', async () => {
