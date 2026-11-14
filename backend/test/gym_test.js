@@ -6,9 +6,9 @@ const mongoose = require('mongoose');
 const Plan = require('../models/Plan');
 const Membership = require('../models/Membership');
 const { createPlan, updatePlan, deletePlan, getPlans } = require('../controllers/planController');
-const { requestMembership, cancelMembership } = require('../controllers/membershipController');
+const { requestMembership, reviewMembership, cancelMembership } = require('../controllers/membershipController');
 const { authorize } = require('../middleware/authMiddleware');
-const { validatePlan, validateMembershipRequest } = require('../utils/validation');
+const { validatePlan, validateMembershipRequest, addMonths } = require('../utils/validation');
 
 const { expect } = chai;
 const id = () => new mongoose.Types.ObjectId();
@@ -32,6 +32,9 @@ describe('Validation rules', () => {
   it('rejects a start date in the past', () => {
     const errors = validateMembershipRequest({ planId: 'x', startDate: '2000-01-01' });
     expect(errors).to.include('Start date cannot be in the past');
+  });
+  it('adds months to compute the end date', () => {
+    expect(addMonths('2026-01-15', 3).getMonth()).to.equal(3); // April (0-based)
   });
 });
 
@@ -113,7 +116,7 @@ describe('Plan controller', () => {
   });
 });
 
-describe('Membership requests', () => {
+describe('Membership workflow', () => {
   it('lets a member request an active plan (201, status pending)', async () => {
     const planId = id();
     sinon.stub(Plan, 'findById').resolves({ _id: planId, isActive: true });
@@ -132,6 +135,27 @@ describe('Membership requests', () => {
     const res = mockRes();
     await requestMembership({ user: { id: id() }, body: { planId: id(), startDate: tomorrow() } }, res);
     expect(res.status.calledWith(409)).to.be.true;
+  });
+
+  it('admin approval activates the membership and sets the end date', async () => {
+    const m = {
+      status: 'pending',
+      startDate: new Date('2026-12-01'),
+      plan: { durationMonths: 3 },
+      save: sinon.stub().resolves(),
+    };
+    sinon.stub(Membership, 'findById').returns({ populate: sinon.stub().resolves(m) });
+    const res = mockRes();
+    await reviewMembership({ params: { id: 'm1' }, body: { decision: 'approve' } }, res);
+    expect(m.status).to.equal('active');
+    expect(m.endDate.getMonth()).to.equal(2); // March 2027
+    expect(m.save.calledOnce).to.be.true;
+  });
+
+  it('requires a reason when rejecting (400)', async () => {
+    const res = mockRes();
+    await reviewMembership({ params: { id: 'm1' }, body: { decision: 'reject' } }, res);
+    expect(res.status.calledWith(400)).to.be.true;
   });
 
   it("stops a member cancelling someone else's membership (403)", async () => {

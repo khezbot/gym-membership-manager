@@ -1,5 +1,11 @@
 const express = require('express');
-const { requestMembership, getMyMemberships, cancelMembership } = require('../controllers/membershipController');
+const {
+  requestMembership,
+  getMyMemberships,
+  cancelMembership,
+  getAllMemberships,
+  reviewMembership,
+} = require('../controllers/membershipController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -8,5 +14,9 @@ const router = express.Router();
 router.post('/', protect, authorize('member'), requestMembership);
 router.get('/mine', protect, authorize('member'), getMyMemberships);
 router.patch('/:id/cancel', protect, authorize('member'), cancelMembership);
+
+// Admin
+router.get('/', protect, authorize('admin'), getAllMemberships);
+router.patch('/:id/review', protect, authorize('admin'), reviewMembership);
 
 module.exports = router;

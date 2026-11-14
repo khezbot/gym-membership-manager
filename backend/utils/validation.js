@@ -52,4 +52,11 @@ const validateMembershipRequest = ({ planId, startDate } = {}, now = new Date())
   return errors;
 };
 
-module.exports = { validateRegister, validatePlan, validateMembershipRequest };
+// Adds whole months to a date (used to compute a membership end date).
+const addMonths = (date, months) => {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+};
+
+module.exports = { validateRegister, validatePlan, validateMembershipRequest, addMonths };
