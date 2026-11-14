@@ -1,6 +1,6 @@
 const Membership = require('../models/Membership');
 const Plan = require('../models/Plan');
-const { validateMembershipRequest } = require('../utils/validation');
+const { validateMembershipRequest, addMonths } = require('../utils/validation');
 
 // POST /api/memberships  (member) — request to join a plan
 const requestMembership = async (req, res) => {
@@ -51,4 +51,47 @@ const cancelMembership = async (req, res) => {
   }
 };
 
-module.exports = { requestMembership, getMyMemberships, cancelMembership };
+// GET /api/memberships?status=pending  (admin)
+const getAllMemberships = async (req, res) => {
+  try {
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+    const items = await Membership.find(filter)
+      .populate('plan')
+      .populate('member', 'name email phone')
+      .sort({ createdAt: -1 });
+    return res.json(items);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// PATCH /api/memberships/:id/review  (admin) — body: { decision: 'approve'|'reject', adminNote }
+const reviewMembership = async (req, res) => {
+  const { decision, adminNote } = req.body || {};
+  if (!['approve', 'reject'].includes(decision)) {
+    return res.status(400).json({ message: "Decision must be 'approve' or 'reject'" });
+  }
+  if (decision === 'reject' && (!adminNote || !String(adminNote).trim())) {
+    return res.status(400).json({ message: 'Please give a reason when rejecting a request' });
+  }
+  try {
+    const m = await Membership.findById(req.params.id).populate('plan');
+    if (!m) return res.status(404).json({ message: 'Membership not found' });
+    if (m.status !== 'pending') return res.status(400).json({ message: `Only pending requests can be reviewed (this one is ${m.status})` });
+
+    if (decision === 'approve') {
+      m.status = 'active';
+      m.endDate = addMonths(m.startDate, m.plan.durationMonths);
+    } else {
+      m.status = 'rejected';
+    }
+    if (adminNote) m.adminNote = adminNote;
+    await m.save();
+    return res.json(m);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { requestMembership, getMyMemberships, cancelMembership, getAllMemberships, reviewMembership };
