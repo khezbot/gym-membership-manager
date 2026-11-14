@@ -6,12 +6,18 @@ const mongoose = require('mongoose');
 const Plan = require('../models/Plan');
 const Membership = require('../models/Membership');
 const { createPlan, updatePlan, deletePlan, getPlans } = require('../controllers/planController');
+const { requestMembership, cancelMembership } = require('../controllers/membershipController');
 const { authorize } = require('../middleware/authMiddleware');
-const { validatePlan } = require('../utils/validation');
+const { validatePlan, validateMembershipRequest } = require('../utils/validation');
 
 const { expect } = chai;
 const id = () => new mongoose.Types.ObjectId();
 const mockRes = () => ({ status: sinon.stub().returnsThis(), json: sinon.spy() });
+const tomorrow = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+};
 
 afterEach(() => sinon.restore());
 
@@ -22,6 +28,10 @@ describe('Validation rules', () => {
   it('rejects a plan with missing name, bad duration and negative price', () => {
     const errors = validatePlan({ name: '', durationMonths: 30, price: -5 });
     expect(errors).to.have.length(3);
+  });
+  it('rejects a start date in the past', () => {
+    const errors = validateMembershipRequest({ planId: 'x', startDate: '2000-01-01' });
+    expect(errors).to.include('Start date cannot be in the past');
   });
 });
 
@@ -100,5 +110,34 @@ describe('Plan controller', () => {
     await createPlan({ body: { name: 'X', durationMonths: 1, price: 1 } }, res);
     expect(res.status.calledWith(500)).to.be.true;
     expect(res.json.calledWithMatch({ message: 'DB Error' })).to.be.true;
+  });
+});
+
+describe('Membership requests', () => {
+  it('lets a member request an active plan (201, status pending)', async () => {
+    const planId = id();
+    sinon.stub(Plan, 'findById').resolves({ _id: planId, isActive: true });
+    sinon.stub(Membership, 'findOne').resolves(null);
+    const doc = { status: 'pending', populate: sinon.stub().resolvesThis() };
+    sinon.stub(Membership, 'create').resolves(doc);
+    const res = mockRes();
+    await requestMembership({ user: { id: id() }, body: { planId, startDate: tomorrow() } }, res);
+    expect(res.status.calledWith(201)).to.be.true;
+    expect(res.json.firstCall.args[0].status).to.equal('pending');
+  });
+
+  it('rejects a second open membership (409)', async () => {
+    sinon.stub(Plan, 'findById').resolves({ _id: id(), isActive: true });
+    sinon.stub(Membership, 'findOne').resolves({ status: 'active' });
+    const res = mockRes();
+    await requestMembership({ user: { id: id() }, body: { planId: id(), startDate: tomorrow() } }, res);
+    expect(res.status.calledWith(409)).to.be.true;
+  });
+
+  it("stops a member cancelling someone else's membership (403)", async () => {
+    sinon.stub(Membership, 'findById').resolves({ member: id(), status: 'active' });
+    const res = mockRes();
+    await cancelMembership({ params: { id: 'm1' }, user: { id: id() } }, res);
+    expect(res.status.calledWith(403)).to.be.true;
   });
 });

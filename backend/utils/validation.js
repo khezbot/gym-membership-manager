@@ -35,4 +35,21 @@ const validatePlan = (body = {}, partial = false) => {
   return errors;
 };
 
-module.exports = { validateRegister, validatePlan };
+const validateMembershipRequest = ({ planId, startDate } = {}, now = new Date()) => {
+  const errors = [];
+  if (!planId) errors.push('Please choose a plan');
+  if (!startDate) {
+    errors.push('Start date is required');
+  } else {
+    const start = new Date(startDate);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const maxStart = new Date(today);
+    maxStart.setDate(maxStart.getDate() + 60);
+    if (Number.isNaN(start.getTime())) errors.push('Start date is not a valid date');
+    else if (start < today) errors.push('Start date cannot be in the past');
+    else if (start > maxStart) errors.push('Start date must be within the next 60 days');
+  }
+  return errors;
+};
+
+module.exports = { validateRegister, validatePlan, validateMembershipRequest };
