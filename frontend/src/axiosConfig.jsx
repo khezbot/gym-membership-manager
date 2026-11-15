@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Same-origin by default: in development the CRA "proxy" in package.json
+// forwards /api to localhost:5001, and on EC2 Nginx forwards /api to the
+// backend. So there is no hard-coded IP to change when you deploy.
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5001', // switched to same-origin /api in GMM-13
+  baseURL: process.env.REACT_APP_API_URL || '',
   headers: { 'Content-Type': 'application/json' },
 });
 
