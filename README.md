@@ -2,7 +2,7 @@
 
 A MERN (MongoDB, Express, React, Node.js) web app that lets gym **members** browse membership plans and request to join one, and lets gym **admins** (staff) manage plans and approve or reject requests. Built for IFQ636 Assignment 1 by extending the [IFQ636 starter project](https://github.com/nahaQUT/sampleapp_IFQ636).
 
-- **Live URL:** http://54.253.42.230/
+- **Live URL:** http://54.206.121.20/
 - **Release:** `v1.0.0`
 - **Jira:** https://shayanknassab.atlassian.net/jira/software/projects/GMM/boards/2
 - **Figma:** FIGMA_VIEW_LINK
@@ -77,6 +77,7 @@ Deployed to the university-provided EC2 instance (Ubuntu 24.04, t2.micro, Asia P
 - No online payment: payment is taken at the front desk after approval.
 - Memberships don't expire automatically; status stays `active` after the end date (a scheduled job is a planned improvement).
 - HTTP only (no HTTPS/domain) on the university instance.
+- The instance has no Elastic IP, so its public IP changes if it is stopped and started; the Live URL above is updated when that happens.
 - JWT is stored in `localStorage`; an httpOnly cookie would be safer.
 - No password reset or email notifications.
 - One admin role only (no separate manager/trainer roles).
