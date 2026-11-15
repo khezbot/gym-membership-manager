@@ -5,7 +5,7 @@ A MERN (MongoDB, Express, React, Node.js) web app that lets gym **members** brow
 - **Live URL:** http://54.206.121.20/
 - **Release:** `v1.0.0`
 - **Jira:** https://shayanknassab.atlassian.net/jira/software/projects/GMM/boards/2
-- **Figma:** FIGMA_VIEW_LINK
+- **Figma:** https://www.figma.com/design/VlwMWRZee8uhJeuUoBq1sd/Gym-Membership-Manager-2?node-id=1-3 (hi-fi prototype on page "3 Hi-fi"; press ▶ Present and choose Member flow or Admin flow)
 
 ## Features
 
